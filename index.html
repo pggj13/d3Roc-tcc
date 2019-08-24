@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+  body {
+    font: 10px sans-serif;
+  }
+
+  .axis path,
+  .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+  }
+
+  .tess {
+    fill: none;
+    stroke: aliceblue;
+    stroke-width: 0px;
+    opacity: 0.5;
+  }
+
+  .line {
+    fill: none;
+    stroke: steelblue;
+    stroke-width: 1.5px;
+  }
+
+  .dot {
+    fill: none;
+  }
+
+  .vors :hover circle {
+    fill: red;
+  }
+
+  .vors :hover text {
+    opacity: 1;
+  }
+
+  .hidetext {
+    opacity: 0;
+  }
+
+
+  html {
+    min-width: 1040px;
+  }
+
+  body {
+    background: #fcfcfa;
+    color: #333;
+    margin: 1em auto 4em auto;
+    position: relative;
+    width: 960px;
+  }
+
+  header {
+
+    width: 160px;
+    position: fixed;
+    float: left;
+    margin-left: -160px;
+
+  }
+</style>
+
+<body>
+
+
+
+  <header>
+    <a href="http://github.com/sachsmc/d3roc">View on github</a>
+  </header>
+
+  <h1>Interactive ROC Curves</h1>
+  <label>Sample size</label><input type="number" id="samplesize" min="10" max="15000" value="200"> <br />
+  <label>Association Strength</label><input type="number" id="beta" min="0" max="4" value=".2"> <br />
+  <button type="submit" id="sub">Submit</button>
+  <p id="roc"></p>
+
+  <script src="d3.v3.min.js"></script>
+  <script>
+
+    var margin = { top: 20, right: 20, bottom: 30, left: 50 },
+      width = 640 - margin.left - margin.right,
+      height = 520 - margin.top - margin.bottom;
+
+    var x = d3.scale.linear()
+      .domain([0, 1])
+      .range([0, width]);
+
+    var y = d3.scale.linear()
+      .domain([0, 1])
+      .range([height, 0]);
+
+    var xAxis = d3.svg.axis()
+      .scale(x)
+      .orient("bottom");
+
+    var yAxis = d3.svg.axis()
+      .scale(y)
+      .orient("left");
+
+    var line = d3.svg.line()
+      .x(function (d) { return x(d.fpr); })
+      .y(function (d) { return y(d.tpr); })
+      .interpolate("linear");
+
+    var voronoi = d3.geom.voronoi()
+      .x(function (d) { return x(d.fpr); })
+      .y(function (d) { return y(d.tpr); })
+      .clipExtent([[-2, -2], [width + 2, height + 2]]);
+
+    var svg = d3.select("p#roc").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+    svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+      ;
+
+    svg.append("text")
+      .attr("class", "x label")
+      .attr("text-anchor", "end")
+      .attr("x", width)
+      .attr("y", height - 6)
+      .text("False Positive Fraction");
+
+    svg.append("text")
+      .attr("class", "y label")
+      .attr("text-anchor", "end")
+      .attr("y", 6)
+      .attr("dy", ".75em")
+      .attr("transform", "rotate(-90)")
+      .text("True Positive Fraction");
+
+    draw(svg, 6, .2);
+
+    /*d3.select("#sub").on("click", function () {
+      var nnn = document.getElementById("samplesize").value;
+      var beta = document.getElementById("beta").value;
+      draw(svg, nnn, beta);
+    });*/
+
+    function draw(svg, sampSi, effSi) {
+
+
+
+
+      var mark = []
+      var labels = [];
+
+      for (var i = 0; i <= 6; i++) {
+
+
+
+        var xx = Math.random() * 10
+
+
+
+
+        mark.push(xx);
+
+
+
+        var lp = Math.exp(effSi * xx) / (1 + Math.exp(effSi * xx));
+
+        //console.log(lp);
+
+        if (Math.random() < lp) {
+          labels.push(1);
+        }
+        else {
+          labels.push(0);
+        }
+      }
+
+      var markSort = mark.slice(0).sort();
+
+
+
+
+      var labSort = [];
+      var oneDex = [];
+      var zeroDex = [];
+
+
+      for (var i = 0; i < markSort.length; i++) {
+        var cranker = labels[mark.indexOf(markSort[i])]
+        labSort.push(cranker);
+
+
+        if (cranker == 1) {
+          oneDex.push(i);
+        } else {
+          zeroDex.push(i);
+        }
+      }
+
+
+
+      //var data = [];
+
+      var data = [
+
+            { tpr: 0.000, fpr: 0.000 },
+            { tpr: 0.125, fpr: 0.000 },
+            { tpr: 0.250, fpr: 0.011 },
+            { tpr: 0.375, fpr: 0.011 },
+            { tpr: 0.500, fpr: 0.011 },
+            { tpr: 0.563, fpr: 0.011 },
+            { tpr: 0.563, fpr: 0.022 },
+            { tpr: 0.625, fpr: 0.054 },
+            { tpr: 0.625, fpr: 0.065 },
+            { tpr: 0.688, fpr: 0.108 },
+            { tpr: 0.719, fpr: 0.151 },
+            { tpr: 0.750, fpr: 0.172 },
+            { tpr: 0.781, fpr: 0.194 },
+            { tpr: 0.781, fpr: 0.226 },
+            { tpr: 0.813, fpr: 0.280 },
+            { tpr: 0.813, fpr: 0.323 },
+            { tpr: 0.844, fpr: 0.376 },
+            { tpr: 0.844, fpr: 0.419 },
+            { tpr: 0.875, fpr: 0.484 },
+            { tpr: 0.875, fpr: 0.548 },
+            { tpr: 0.906, fpr: 0.581 },
+            { tpr: 0.938, fpr: 0.602},
+            { tpr: 0.938, fpr: 0.634 },
+            { tpr: 0.938, fpr: 0.677 },
+            { tpr: 0.938, fpr: 0.720 },
+            { tpr: 0.938, fpr: 0.763 },
+            { tpr: 0.969, fpr: 0.806 },
+            { tpr: 0.969, fpr: 0.849 },
+            { tpr: 0.969, fpr: 0.892 },
+            { tpr: 0.969, fpr: 0.935 },
+            { tpr: 0.969, fpr: 0.978 },
+            { tpr: 1, fpr: 1}
+
+        ];
+
+        console.log(data);
+
+    /*
+      for (var i = 0; i < markSort.length; i++) {
+
+
+        data.push({
+          "tpr": calcTPR(oneDex, markSort, markSort[i]),
+          "fpr": calcFPR(zeroDex, markSort, markSort[i])
+          //"cut": markSort[i]
+        });
+
+        
+      }*/
+
+     
+
+
+
+
+
+
+      /*var tess = voronoi(data);
+
+      for (var i = 0; i < data.length; i++) {
+
+        data[i].vtess = tess[i];
+
+      }*/
+
+      svg.selectAll("path.line").remove();
+
+      svg.append("path")
+        .attr("class", "line")
+        .attr("d", line(data));
+
+      var cells = svg.append("g").attr("class", "vors").selectAll("g");
+
+      cell = cells.data(data);
+      cell.exit().remove();
+
+      var cellEnter = cell.enter().append("g");
+
+      cellEnter.append("circle")
+        .attr("class", "dot")
+        .attr("r", 3.5)
+        .attr("cx", function (d) { return x(d.fpr); })
+        .attr("cy", function (d) { return y(d.tpr); })
+        ;
+
+      /*cellEnter.append("path")
+        .attr("class", "tess")
+        ;
+
+      cell.select("path").attr("d", function (d) { 
+
+        console.log(d);
+
+        return "M" + d.vtess.join("L") + "Z"; 
+      });*/
+
+      /* cellEnter.append("text").attr("class", "hidetext")
+         .attr("x", function (d) { return x(d.fpr) + 10; })
+         .attr("y", function (d) { return y(d.tpr) + 10; })
+         .text(function (d) { return "cutoff: " + Math.round(d.cut * 10) / 10; });*/
+
+    }
+
+    function calcTPR(oneDex, markSort, m) {
+
+
+      /*var TPR = [];
+
+      data = [
+
+        { sen: 0.952 },
+        { sen: 0.778 },
+        { sen: 0.904 },
+        { sen: 0.929 },
+        { sen: 0.815 },
+        { sen: 0.600 }
+      ];
+
+      var i = 0;
+
+      data.forEach(function (d) {
+        TPR[i] = d.sen;
+        i++;
+      });
+
+      //console.log(TPR);*/
+
+
+
+      var TPR = 0;
+      for (var i = 0; i < oneDex.length; i++) {
+        if (markSort[oneDex[i]] >= m) {
+          TPR = TPR + (1 / oneDex.length);
+
+        }
+      }
+
+
+
+
+console.log(TPR);
+
+      return TPR;
+
+    }
+
+    function calcFPR(zeroDex, markSort, m) {
+
+      var FPR = 0;
+      for (var i = 0; i < zeroDex.length; i++) {
+        if (markSort[zeroDex[i]] >= m) {
+          FPR = FPR + (1 / zeroDex.length);
+        }
+      }
+
+
+      return FPR;
+
+    }
+
+
+  </script>
